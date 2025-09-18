@@ -14,7 +14,7 @@
 (require 'org-roam-dailies)
 (require 'bookmark)
 
-(defcustom elkeep-cli-bin "/home/nox/.local/bin/elkeep-cli"
+(defcustom elkeep-cli-bin (executable-find "elkeep-cli")
   "Binary for elkeep.")
 
 (defcustom elkeep-notes-directory org-roam-directory
