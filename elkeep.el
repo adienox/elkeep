@@ -147,11 +147,11 @@ If called interactively, automatically save the chosen entry."
   (elkeep-run-cli-async
    `("-j" ,elkeep-journal-directory)
    "*elkeep-cli-output*"
-   (lambda (proc event)
+   (lambda (process event)
      (cond
       ;; Success
-      ((and (eq (process-status proc) 'exit)
-            (= (process-exit-status proc) 0))
+      ((and (eq (process-status process) 'exit)
+            (= (process-exit-status process) 0))
        (message "Journal download finished.")
        (org-roam-db-sync)
 
@@ -159,10 +159,10 @@ If called interactively, automatically save the chosen entry."
        (kill-buffer (process-buffer process)))
 
       ;; Error
-      ((eq (process-status proc) 'exit)
+      ((eq (process-status process) 'exit)
        (message "elkeep-cli -j failed (exit %d). See buffer %s"
-                (process-exit-status proc)
-                (buffer-name (process-buffer proc))))))))
+                (process-exit-status process)
+                (buffer-name (process-buffer process))))))))
 
 (provide 'elkeep)
 ;;; elkeep.el ends here
