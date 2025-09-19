@@ -1,4 +1,4 @@
-;;; elkeep.el --- Google Keep for Emacs -*- no-byte-compile: t; lexical-binding: t; -*-
+;;; elkeep.el --- Google Keep for Emacs -*- lexical-binding: t; -*-
 
 ;; Author: Adwait Adhikari
 ;; Version: 0.1
