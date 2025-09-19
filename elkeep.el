@@ -106,16 +106,18 @@ On failure, display the process buffer for debugging."
       ;; Success
       ((and (eq (process-status process) 'exit)
             (= (process-exit-status process) 0))
+
+       ;; Add file to bookmark
+       (with-current-buffer (process-buffer process)
+         (let ((output (buffer-string))
+               (saved-file-path (cdr (split-string output ": ")))
+               (bm-name "elkeep-last-downloaded"))
+           (when saved-file-path
+             (with-current-buffer (find-file-noselect recent-file)
+               (bookmark-set bm-name)))))
+
        (message "Downloaded entry %s, syncing Org-roam DB..." id)
        (org-roam-db-sync)
-
-       ;; find most recent file in org-roam-directory
-       (let* ((recent-file (car (directory-files org-roam-directory t "\\.org$" t)))
-              (bm-name "elkeep-last-downloaded"))
-         (when recent-file
-           ;; create a temporary buffer bookmark, like org-capture
-           (with-current-buffer (find-file-noselect recent-file)
-             (bookmark-set bm-name))))
 
        ;; kill buffer to avoid clutter
        (kill-buffer (process-buffer process)))
