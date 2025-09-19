@@ -12,6 +12,7 @@
 ;;; Code:
 (require 'org-roam)
 (require 'org-roam-dailies)
+(require 'nano-read)
 (require 'bookmark)
 
 (defgroup elkeep nil
