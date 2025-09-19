@@ -14,14 +14,29 @@
 (require 'org-roam-dailies)
 (require 'bookmark)
 
-(defcustom elkeep-cli-bin (executable-find "elkeep-cli")
-  "Binary for elkeep.")
+(defgroup elkeep nil
+  "Integration with elkeep-cli for note management."
+  :group 'applications)
 
-(defcustom elkeep-notes-directory org-roam-directory
-  "Default directory to save the retrieved notes.")
+(defcustom elkeep-cli-bin (or (executable-find "elkeep-cli") "elkeep-cli")
+  "Path to the elkeep-cli binary.
+Defaults to whatever `executable-find' locates in your PATH, or
+just `elkeep-cli' if nothing is found."
+  :type 'string
+  :group 'elkeep)
 
-(defcustom elkeep-journal-directory (concat org-roam-directory "/" org-roam-dailies-directory)
-  "Default directory to save journals.")
+(defcustom elkeep-notes-directory nil
+  "Directory where elkeep saves notes.
+If you use Org-roam, you may want to set this to `org-roam-directory`."
+  :type 'directory
+  :group 'elkeep)
+
+(defcustom elkeep-journal-directory nil
+  "Directory where elkeep saves journals.
+If you use Org-roam dailies, you may want to set this to
+  (expand-file-name org-roam-dailies-directory org-roam-directory)."
+  :type 'directory
+  :group 'elkeep)
 
 (defun elkeep-run-cli-async (args buffer-name sentinel)
   "Run `elkeep-cli' with ARGS asynchronously in BUFFER-NAME.
