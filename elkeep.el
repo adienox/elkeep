@@ -109,11 +109,11 @@ On failure, display the process buffer for debugging."
 
        ;; Add file to bookmark
        (with-current-buffer (process-buffer process)
-         (let ((output (buffer-string))
-               (saved-file-path (cdr (split-string output ": ")))
-               (bm-name "elkeep-last-downloaded"))
+         (let* ((output (string-trim (buffer-string)))
+                (saved-file-path (cadr (split-string output ": ")))
+                (bm-name "elkeep-last-downloaded"))
            (when saved-file-path
-             (with-current-buffer (find-file-noselect recent-file)
+             (with-current-buffer (find-file-noselect saved-file-path)
                (bookmark-set bm-name)))))
 
        (message "Downloaded entry %s, syncing Org-roam DB..." id)
