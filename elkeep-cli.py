@@ -1,4 +1,21 @@
 #!/usr/bin/env python3
+"""CLI tool for interacting with Google Keep and exporting notes to Org mode.
+
+This module provides commands to:
+- List notes
+- Retrieve a specific note by ID
+- Export journal entries to Org files
+- Store and reuse authentication tokens securely
+
+It uses the gkeepapi library for communication with Google Keep,
+keyring for secure token storage, and pypandoc for file conversion.
+
+Typical usage:
+    elkeep-cli -l
+    elkeep-cli -g NOTE_ID -o ./notes
+    elkeep-cli -j ./journals
+"""
+
 import argparse
 import json
 import logging
