@@ -58,10 +58,16 @@ def make_pathsafe(s: str, replacement: str = "_") -> str:
     # Replace problematic characters
     s = (
         s.replace("/", replacement)
-        .replace("\0", replacement)
-        .replace(" ", replacement)
-        .replace("?", replacement)
+         .replace("\0", replacement)
+         .replace(" ", replacement)
+         .replace("?", replacement)
+         .strip()
     )
+    # Collapse multiple consecutive replacements
+    s = re.sub(f"{re.escape(replacement)}+", replacement, s)
+
+    # Remove trailing replacement if present
+    return s.removesuffix(replacement)
 
 
 def save_state(keep: gkeepapi.Keep) -> None:
