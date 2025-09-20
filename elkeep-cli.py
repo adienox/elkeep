@@ -361,7 +361,13 @@ def list_notes(files: list[dict]) -> None:
                             with potential labels.
 
     """
-    notes = [file for file in files if "JOURNAL" not in file["labels"]]
+    exclude = {"JOURNAL", "NOSHOW"}
+    notes = [
+        file
+        for file in files
+        if all(label not in file["labels"] for label in exclude)
+    ]
+
     print(json.dumps(notes))  # noqa: T201
 
 def main() -> None:
