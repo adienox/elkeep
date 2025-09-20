@@ -139,18 +139,26 @@ def combine_file(dst: Path, src: Path) -> None:
     Path.unlink(src)
 
 
-def prepend_org_uuid(path: Path, title: str) -> None:
+def prepend_org_uuid(path: Path, title: str, note: gkeepapi.node) -> None:
     # Generate a random UUID4
     uid = str(uuid.uuid4())
 
     # Build property drawer string
-    header = f":PROPERTIES:\n:ID:\t{uid}\n:END:\n#+title: {title}\n\n"
+    header = f":PROPERTIES:\n:ID:\t{uid}\n:END:\n#+title: {title}\n"
+
+    labels = [str(label) for label in note.labels.all()]
+
+    if "JOURNAL" not in labels:
+        tags = f":{':'.join(labels)}:" if labels else None
+
+    if tags:
+        header = header + f"#+filetags: {tags}\n"
 
     # Read file content
     original = path.read_text(encoding="utf-8")
 
     # Prepend header
-    path.write_text(header + original, encoding="utf-8")
+    path.write_text(header + "\n" + original, encoding="utf-8")
 
 
 def get_note(
@@ -180,7 +188,7 @@ def get_note(
                 combine_file(output_file, f"{output_file}.temp")
             else:
                 convert_file(input_file, output_file)
-                prepend_org_uuid(output_file, title if title else note.title)
+                prepend_org_uuid(output_file, title if title else note.title, note)
 
             note.archived = True
             keep.sync()
