@@ -1,4 +1,14 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+#
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#     "gkeepapi>=0.16.0",
+#     "keyring>=25.6.0",
+#     "pypandoc>=1.15",
+# ]
+# ///
+
 """CLI tool for interacting with Google Keep and exporting notes to Org mode.
 
 This module provides commands to:
