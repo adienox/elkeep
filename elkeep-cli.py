@@ -20,6 +20,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import sys
 import uuid
 from datetime import datetime
@@ -210,8 +211,7 @@ def output_file_name(
     else:
         filename = f"{timestamp}-{make_pathsafe(note.title)}.org"
 
-    return Path(output_path) / filename if output_path else filename
-
+    return Path(output_path) / filename if output_path else Path(filename)
 
 
 def convert_file(input_file: Path, output_file: Path) -> None:
@@ -229,10 +229,8 @@ def convert_file(input_file: Path, output_file: Path) -> None:
         extra_args=["--wrap=none"],
     )
 
-    # remove original file
     if input_file.exists():
         Path.unlink(input_file)
-
 
 def combine_file(dst: Path, src: Path) -> None:
     """Combine the source file and destination file and deletes the source file.
@@ -250,7 +248,6 @@ def combine_file(dst: Path, src: Path) -> None:
         f_dst.write(f_src.read())
 
     Path.unlink(src)
-
 
 def prepend_org_uuid(path: Path, title: str, note: gkeepapi.node) -> None:
     """Prepend a new header containing a id, title, and tags to an Org mode file.
@@ -281,9 +278,11 @@ def prepend_org_uuid(path: Path, title: str, note: gkeepapi.node) -> None:
     # Prepend header
     path.write_text(header + "\n" + original, encoding="utf-8")
 
-
 def get_note(
-    keep: gkeepapi.Keep, note_id: str, output_path: Path, title: str | None = None,
+    keep: gkeepapi.Keep,
+    note_id: str,
+    output_path: Path | None,
+    title: str | None = None,
 ) -> None:
     """Retrieve a note by its ID, save its content to a file.
 
@@ -302,7 +301,8 @@ def get_note(
 
     else:
         if note:
-            input_file = Path("untitled.md") if note.title == "" else Path(f"{note.title}.md")
+            input_file = "untitled.md" if note.title == "" else f"{note.title}.md"
+            input_file = Path(input_file)
 
             if output_path and output_path.suffix == ".org":
                 output_file = output_path
@@ -320,11 +320,11 @@ def get_note(
                 convert_file(input_file, output_file)
                 prepend_org_uuid(output_file, title if title else note.title, note)
 
+            print(f"File saved: {output_file}") # noqa: T201
             note.archived = True
             keep.sync()
         else:
             logger.error("No note found with the given ID.")
-
 
 def get_journals(keep: gkeepapi.Keep, journal_path: str) -> None:
     """Retrieve journal notes from Google Keep and save them as Org files.
@@ -390,13 +390,15 @@ def main() -> None:
         sys.exit(1)
 
     keep = login_keep()
+
     if args.token:
         store_token(args.token)
     elif args.list:
-        notes = list_notes(keep)
-        print(json.dumps(notes)) # noqa: T201
+        files = get_files_list(keep)
+        list_notes(files)
     elif args.get:
-        get_note(keep, args.get, Path(args.output), args.title)
+        output_path = Path(args.output) if args.output else None
+        get_note(keep, args.get, output_path, args.title)
     elif args.journal:
         get_journals(keep, args.journal)
     else:
