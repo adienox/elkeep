@@ -109,6 +109,15 @@ def store_token(token: str) -> None:
 
 
 def login_keep() -> gkeepapi.Keep:
+    """Authenticate and log into Google Keep using stored credentials.
+
+    Returns:
+        gkeepapi.Keep: An authenticated instance of the Google Keep API client.
+
+    Raises:
+        SystemExit: Exits the program in case of credential retrieval or login failure.
+
+    """
     keep = gkeepapi.Keep()
     try:
         mail = keyring.get_credential("google-keep-token", None).username
@@ -173,7 +182,25 @@ def get_files_list(keep: gkeepapi.Keep) -> list[dict]:
         return names
 
 
-def output_file_name(note: gkeepapi.node, title: str | None, output_path: Path) -> Path:
+def output_file_name(
+    note: gkeepapi.node,
+    title: str | None,
+    output_path: Path | None,
+) -> Path:
+    """Generate a filename based on a note's creation timestamp and title.
+
+    Args:
+        note (gkeepapi.node): The note object from gpkeepapi.
+        title (str | None): Optional custom title to use for the filename;
+                            if None, uses the note's title.
+
+        output_path (Path | None): Optional path where the file should be saved;
+                                   if None, uses the current directory.
+
+    Returns:
+        Path: The complete file path as a Path object, including the formatted filename.
+
+    """
     date = note.timestamps.created.astimezone()
 
     timestamp = date.strftime("%Y%m%d%H%M%S")
@@ -188,7 +215,13 @@ def output_file_name(note: gkeepapi.node, title: str | None, output_path: Path) 
 
 
 def convert_file(input_file: Path, output_file: Path) -> None:
-    # convert the file into an org file
+    """Convert a file to Org mode format and remove the original file.
+
+    Args:
+        input_file (Path): The path of the file to be converted.
+        output_file (Path): The path where the converted file will be saved.
+
+    """
     pypandoc.convert_file(
         input_file,
         "org",
@@ -202,7 +235,17 @@ def convert_file(input_file: Path, output_file: Path) -> None:
 
 
 def combine_file(dst: Path, src: Path) -> None:
+    """Combine the source file and destination file and deletes the source file.
 
+    Args:
+        dst (Path): The path to the destination file.
+        src (Path): The path to the source file.
+
+    Raises:
+        FileNotFoundError: If the source file does not exist.
+        IOError: If an I/O error occurs during file operations.
+
+    """
     with Path.open(dst, "a") as f_dst, Path.open(src, "r") as f_src:
         f_dst.write(f_src.read())
 
@@ -210,6 +253,14 @@ def combine_file(dst: Path, src: Path) -> None:
 
 
 def prepend_org_uuid(path: Path, title: str, note: gkeepapi.node) -> None:
+    """Prepend a new header containing a id, title, and tags to an Org mode file.
+
+    Args:
+        path (Path): The path to the Org mode file.
+        title (str): The title to be added in the header.
+        note (gkeepapi.node): The note whose labels will be used as tags.
+
+    """
     # Generate a random UUID4
     uid = str(uuid.uuid4())
 
