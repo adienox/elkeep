@@ -22,8 +22,24 @@ else:
 
 
 def make_pathsafe(s: str, replacement: str = "_") -> str:
-    # Replace '/' and '\0' only
-    return (
+    r"""Convert a string into a path-safe format by replacing problematic characters.
+
+    This function replaces characters such as '/', '\0', ' ', and '?'
+    with a specified replacement string (default is '_'). It also
+    collapses multiple consecutive replacements into a single one and
+    removes any trailing replacement characters.
+
+    Args:
+        s (str): The input string to be made path-safe.
+        replacement (str): The string to replace problematic characters with.
+                           Defaults to '_'.
+
+    Returns:
+        str: A path-safe version of the input string.
+
+    """
+    # Replace problematic characters
+    s = (
         s.replace("/", replacement)
         .replace("\0", replacement)
         .replace(" ", replacement)
@@ -32,17 +48,39 @@ def make_pathsafe(s: str, replacement: str = "_") -> str:
 
 
 def save_state(keep: gkeepapi.Keep) -> None:
+    """Save the current state of the Google Keep instance to a JSON file.
+
+    Args:
+        keep (gkeepapi.Keep): The Google Keep API client instance.
+
+    """
     state = keep.dump()
     fh = Path.open(state_file, "w")
     json.dump(state, fh)
 
 
 def load_state() -> dict:
+    """Load the application state from a JSON file.
+
+    Returns:
+        dict: The contents of the state file as a dictionary.
+
+    Raises:
+        FileNotFoundError: If the state file does not exist.
+        json.JSONDecodeError: If the state file contains invalid JSON.
+
+    """
     fh = Path.open(state_file, "r")
     return json.load(fh)
 
 
 def store_token(token: str) -> None:
+    """Store the provided token in the keyring associated with the specified email.
+
+    Args:
+        token (str): The token to be stored.
+
+    """
     mail = input("Enter email: ")
     keyring.set_password("google-keep-token", mail, token)
 
@@ -70,7 +108,16 @@ def login_keep() -> gkeepapi.Keep:
     return keep
 
 
-def list_notes(keep: gkeepapi.Keep) -> list[dict]:
+def get_files_list(keep: gkeepapi.Keep) -> list[dict]:
+    """Retrieve notes list from google keep.
+
+    Args:
+        keep (gkeepapi.Keep): The Google Keep API client instance.
+
+    Returns:
+        list[dict]: list of notes with its properties
+
+    """
     try:
         notes = keep.find(archived=False, trashed=False)
 
@@ -164,6 +211,15 @@ def prepend_org_uuid(path: Path, title: str, note: gkeepapi.node) -> None:
 def get_note(
     keep: gkeepapi.Keep, note_id: str, output_path: Path, title: str | None = None,
 ) -> None:
+    """Retrieve a note by its ID, save its content to a file.
+
+    Args:
+        keep (gkeepapi.Keep): The Google Keep API client instance.
+        note_id (str): The ID of the note to be retrieved.
+        output_path (Path | None): The path where the output file should be saved.
+        title (str | None): The title to use for the output file, if provided.
+
+    """
     try:
         note = keep.get(note_id)
 
@@ -197,8 +253,14 @@ def get_note(
 
 
 def get_journals(keep: gkeepapi.Keep, journal_path: str) -> None:
+    """Retrieve journal notes from Google Keep and save them as Org files.
 
-    notes = list_notes(keep)
+    Args:
+        keep (gkeepapi.Keep): The Google Keep API client instance.
+        journal_path (str): The directory path where the journal files will be saved.
+
+    """
+    notes = get_files_list(keep)
 
     for note in notes:
         if "JOURNAL" in note["labels"]:
@@ -207,8 +269,23 @@ def get_journals(keep: gkeepapi.Keep, journal_path: str) -> None:
 
             get_note(keep, note["id"], filename, title)
 
+def list_notes(files: list[dict]) -> None:
+    """Print a list of notes that do not have the label "JOURNAL".
+
+    Args:
+        files (list[dict]): A list of files where each dictionary represents a file
+                            with potential labels.
+
+    """
+    notes = [file for file in files if "JOURNAL" not in file["labels"]]
+    print(json.dumps(notes))  # noqa: T201
 
 def main() -> None:
+    """Entry point for the program.
+
+    Parses command-line arguments and logs into google keep.
+
+    """
     parser = argparse.ArgumentParser(
         description="A simple CLI tool to interact with gkeep",
     )
