@@ -150,6 +150,17 @@ def login_keep() -> gkeepapi.Keep:
 
     return keep
 
+def get_labels(note: gkeepapi._node.TopLevelNode) -> list[str]:
+    """Retrieve all labels associated with a given note.
+
+    Args:
+        note (gkeepapi._node.TopLevelNode): The note from which to retrieve labels.
+
+    Returns:
+        list[str]: A list of label names as strings.
+
+    """
+    return [str(label) for label in note.labels.all()]
 
 def get_files_list(keep: gkeepapi.Keep) -> list[dict]:
     """Retrieve notes list from google keep.
@@ -178,7 +189,7 @@ def get_files_list(keep: gkeepapi.Keep) -> list[dict]:
                 name = note.text.strip()
                 notitle = True
 
-            labels = [str(x) for x in note.labels.all()]
+            labels = get_labels(note)
 
             names.append(
                 {
@@ -275,7 +286,7 @@ def prepend_org_uuid(path: Path, title: str, note: gkeepapi._node.TopLevelNode) 
     # Build property drawer string
     header = f":PROPERTIES:\n:ID:\t{uid}\n:END:\n#+title: {title}\n"
 
-    labels = [str(label) for label in note.labels.all()]
+    labels = get_labels(note)
 
     if "JOURNAL" not in labels:
         tags = f":{':'.join(labels)}:" if labels else None
