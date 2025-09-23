@@ -255,6 +255,7 @@ def combine_file(dst: Path, src: Path) -> None:
 
     """
     with Path.open(dst, "a") as f_dst, Path.open(src, "r") as f_src:
+        f_dst.write("\n")
         f_dst.write(f_src.read())
 
     Path.unlink(src)
