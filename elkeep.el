@@ -66,14 +66,20 @@ Handles extra lines and trims whitespace."
 
 (defun elkeep-prompt-for-entry (entries)
   "Prompt user to choose an entry from ENTRIES.
-Returns cons (id . notitle) of the chosen entry."
-  (let* ((candidates (mapcar (lambda (entry)
-                               (cons (alist-get 'name entry)
-                                     (cons (alist-get 'id entry) (alist-get 'notitle entry))))
-                             entries))
-         (choice (completing-read "Choose entry: " (mapcar #'car candidates))))
-    (message "%s" (cdr (assoc choice candidates)))
-    (cdr (assoc choice candidates))))
+Returns cons (id . notitle) of the chosen entry, or nil if user quits."
+  (let* ((candidates
+          (mapcar (lambda (entry)
+                    (cons (alist-get 'name entry)
+                          (cons (alist-get 'id entry)
+                                (alist-get 'notitle entry))))
+                  entries))
+         choice)
+    (condition-case nil
+        (setq choice (completing-read "Choose entry: " (mapcar #'car candidates)))
+      (quit ;; handle user quitting
+       (setq choice nil)))
+    (when choice
+      (cdr (assoc choice candidates)))))
 
 (defun elkeep-get-entries-sentinel (interactive-p proc event)
   "Sentinel for `elkeep-get-entries'.
@@ -91,8 +97,11 @@ INTERACTIVE-P indicates if function was called interactively.
             (when interactive-p
               (if notitle
                   (progn
-                    (let* ((title (nano-read-with-info "TITLE:" "Note is without a title")))
-                      (elkeep-save-entry id title)))
+                    (let* ((title (condition-case nil
+                                      (nano-read-with-info "TITLE:" "Note is without a title")
+                                    (quit nil))))  ;; handle user quitting
+                      (when (and title (not (string-empty-p (string-trim title))))
+                        (elkeep-save-entry id title))))
                 (elkeep-save-entry id)))
             id)
         (message "No valid JSON entries found.")))
