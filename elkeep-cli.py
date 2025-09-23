@@ -243,12 +243,15 @@ def convert_file(input_file: Path, output_file: Path) -> None:
         output_file (Path): The path where the converted file will be saved.
 
     """
-    pypandoc.convert_file(
+    org_text = pypandoc.convert_file(
         input_file,
         "org",
-        outputfile=output_file,
         extra_args=["--wrap=none"],
     )
+    cleaned = re.sub(r":PROPERTIES:\n[\s\S]*?:END:\n?", "", org_text)
+
+    with Path.open(output_file, "w") as f:
+        f.write(cleaned)
 
     if input_file.exists():
         Path.unlink(input_file)
