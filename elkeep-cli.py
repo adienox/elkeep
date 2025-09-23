@@ -194,14 +194,14 @@ def get_files_list(keep: gkeepapi.Keep) -> list[dict]:
 
 
 def output_file_name(
-    note: gkeepapi.node,
+    note: gkeepapi._node.TopLevelNode,
     title: str | None,
     output_path: Path | None,
 ) -> Path:
     """Generate a filename based on a note's creation timestamp and title.
 
     Args:
-        note (gkeepapi.node): The note object from gpkeepapi.
+        note (gkeepapi._node.TopLevelNode): The note object from gpkeepapi.
         title (str | None): Optional custom title to use for the filename;
                             if None, uses the note's title.
 
@@ -260,13 +260,13 @@ def combine_file(dst: Path, src: Path) -> None:
 
     Path.unlink(src)
 
-def prepend_org_uuid(path: Path, title: str, note: gkeepapi.node) -> None:
+def prepend_org_uuid(path: Path, title: str, note: gkeepapi._node.TopLevelNode) -> None:
     """Prepend a new header containing a id, title, and tags to an Org mode file.
 
     Args:
         path (Path): The path to the Org mode file.
         title (str): The title to be added in the header.
-        note (gkeepapi.node): The note whose labels will be used as tags.
+        note (gkeepapi._node.TopLevelNode): The note whose labels will be used as tags.
 
     """
     # Generate a random UUID4
