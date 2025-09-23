@@ -177,8 +177,8 @@ If called interactively, automatically save the chosen entry."
       ;; Success
       ((and (eq (process-status process) 'exit)
             (= (process-exit-status process) 0))
-       (message "Journal download finished.")
        (org-roam-db-sync)
+       (message "Journal download finished.")
 
        ;; kill buffer to avoid clutter
        (kill-buffer (process-buffer process)))
