@@ -325,6 +325,7 @@ def get_note(
         if note:
             input_file = "untitled.md" if note.title == "" else f"{note.title}.md"
             input_file = Path(input_file)
+            is_journal ="JOURNAL" in get_labels(note)
 
             if output_path and output_path.suffix == ".org":
                 output_file = output_path
@@ -333,6 +334,8 @@ def get_note(
 
             # write content to a md file
             with Path.open(input_file, "w") as file:
+                if is_journal:
+                    file.write(f"# {note.title}\n")
                 file.write(note.text)
 
             if output_file.exists():
