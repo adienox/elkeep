@@ -1,0 +1,208 @@
+#+title: elkeep - Google Keep for Emacs
+#+author: Adwait Adhikari
+
+* Overview
+
+=elkeep= is a bridge between Google Keep and Emacs that allows you to sync your Google Keep notes with your Org-mode workflow. It consists of two main components:
+
+- =elkeep-cli.py= - A Python CLI tool for interacting with Google Keep
+- =elkeep.el= - An Emacs package that integrates with Org-roam
+
+The tool downloads Google Keep notes and converts them to Org-mode format, making them accessible within your Emacs environment and compatible with Org-roam for enhanced note-taking and knowledge management.
+
+* Features
+
+- List all notes from Google Keep
+- Retrieve specific notes by ID
+- Export journal entries to Org files
+- Secure authentication token storage using keyring
+- Convert notes to Org-mode format with proper metadata
+- Integration with Org-roam for seamless note management
+- Support for note labels as Org-mode tags
+
+* Requirements
+
+** Python Dependencies
+- Python >=3.13
+- =gkeepapi>=0.16.0= - Google Keep API client
+- =keyring>=25.6.0= - Secure credential storage
+- =pypandoc>=1.15= - Document conversion
+
+** Emacs Dependencies
+- Emacs >=27.1
+- =org-roam>=2.0.0= - Note-taking and knowledge management
+- =nano-read= - Enhanced reading interface
+
+** System Dependencies
+- =pandoc= - Document converter (required by pypandoc)
+
+* Installation
+
+** Python CLI Tool
+
+The CLI tool is designed to be run with =uv= (recommended) or can be installed manually.
+
+*** Using uv (Recommended)
+The script includes inline dependency metadata and can be run directly:
+
+#+begin_src bash
+# Make the script executable
+chmod +x elkeep-cli.py
+
+# Run with uv (dependencies will be automatically managed)
+uv run elkeep-cli.py --help
+#+end_src
+
+*** Manual Installation
+#+begin_src bash
+# Install dependencies manually
+pip install gkeepapi>=0.16.0 keyring>=25.6.0 pypandoc>=1.15
+
+# Install pandoc (varies by system)
+# Ubuntu/Debian:
+sudo apt-get install pandoc
+
+# macOS:
+brew install pandoc
+
+# Run the script
+python elkeep-cli.py --help
+#+end_src
+
+** Building Binary (Optional)
+A Makefile is provided to build a standalone binary using Nuitka:
+
+#+begin_src bash
+# Build standalone binary
+make build
+
+# Run the binary
+make run
+
+# Clean build artifacts
+make clean
+#+end_src
+
+** Emacs Package
+
+1. Add =elkeep.el= to your Emacs load path
+2. Ensure dependencies are installed (org-roam, nano-read)
+3. Configure the package in your Emacs configuration:
+
+#+begin_src emacs-lisp
+(require 'elkeep)
+
+;; Configure paths
+(setq elkeep-cli-bin "/path/to/elkeep-cli.py")  ; or just "elkeep-cli" if in PATH
+(setq elkeep-notes-directory "/path/to/notes")   ; e.g., org-roam-directory
+(setq elkeep-journal-directory "/path/to/journals") ; e.g., org-roam-dailies directory
+#+end_src
+
+* Usage
+
+** CLI Tool
+
+*** Authentication
+First, you need to authenticate with Google Keep:
+
+#+begin_src bash
+# Store your master token (you'll need to obtain this from Google Keep)
+elkeep-cli.py -t YOUR_MASTER_TOKEN
+#+end_src
+
+*** List Notes
+#+begin_src bash
+# List all available notes
+elkeep-cli.py -l
+#+end_src
+
+*** Get Specific Note
+#+begin_src bash
+# Download a specific note by ID
+elkeep-cli.py -g NOTE_ID -o ./notes
+
+# Download with custom title
+elkeep-cli.py -g NOTE_ID -o ./notes -T "Custom Title"
+#+end_src
+
+*** Export Journal Entries
+#+begin_src bash
+# Export all journal entries to a directory
+elkeep-cli.py -j ./journals
+#+end_src
+
+** Emacs Integration
+
+*** Interactive Functions
+
+- =elkeep-get-entries= - Query Google Keep for notes and interactively select one to download
+- =elkeep-save-journal= - Download and save journal entries to the configured directory
+
+*** Example Workflow
+
+1. =M-x elkeep-get-entries= - Browse and select notes from Google Keep
+2. Selected notes are automatically saved to =elkeep-notes-directory=
+3. Org-roam database is automatically synced after downloads
+4. Use =M-x elkeep-save-journal= to batch download journal entries
+
+* Configuration
+
+** Emacs Customization Variables
+
+- =elkeep-cli-bin= - Path to the elkeep-cli binary (default: searches PATH)
+- =elkeep-notes-directory= - Directory for saving notes (recommend: =org-roam-directory=)
+- =elkeep-journal-directory= - Directory for journal entries (recommend: org-roam dailies directory)
+
+** Note Processing
+
+- Notes are converted from Google Keep format to Org-mode using pandoc
+- Each note gets a unique UUID in its PROPERTIES drawer
+- Google Keep labels become Org-mode filetags
+- Journal entries are treated specially (no tags added if JOURNAL label is present)
+
+* File Structure
+
+#+begin_example
+elkeep/
+├── elkeep-cli.py          # Python CLI tool
+├── elkeep.el              # Emacs integration
+├── Makefile               # Build configuration
+├── pyproject.toml         # Python project metadata  
+├── uv.lock                # UV lock file
+├── .python-version        # Python version specification
+└── README.org             # This file
+#+end_example
+
+* Authentication & Security
+
+- Authentication tokens are stored securely using the =keyring= library
+- Tokens are automatically reused for subsequent API calls
+- State is saved to avoid repeated authentication
+- Default storage location: =$XDG_DATA_HOME/gkeep_state= or =$HOME/.local/share/gkeep_state=
+
+* Troubleshooting
+
+** Common Issues
+
+*** "No module named 'gkeepapi'" Error
+Make sure you have the required Python dependencies installed or use =uv run= to automatically manage dependencies.
+
+*** Pandoc Not Found
+Install pandoc on your system. The =pypandoc= Python library requires the pandoc binary to be available.
+
+*** Emacs Integration Not Working
+Ensure =elkeep-cli-bin= points to the correct script location and that it's executable.
+
+** Debugging
+
+- CLI processes create buffers like =*elkeep-cli-output*= and =*elkeep-get-entry*= for debugging
+- Failed operations will display the process buffer with error details
+- Use =M-x elkeep-get-entries= interactively to see detailed process output
+
+* License
+
+See the project repository for license information.
+
+* Contributing
+
+This project is maintained at https://github.com/adienox/elkeep. Issues and pull requests are welcome.
