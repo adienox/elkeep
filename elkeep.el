@@ -39,6 +39,16 @@ If you use Org-roam dailies, you may want to set this to
   :type 'directory
   :group 'elkeep)
 
+(defcustom elkeep-journal-label nil
+  "The label to be used to identify journal note."
+  :type 'string
+  :group 'elkeep)
+
+(defcustom elkeep-exclude-labels nil
+  "List of labels to exclude when querying for notes."
+  :type 'string-list
+  :group 'elkeep)
+
 (defun elkeep-run-cli-async (args buffer-name sentinel)
   "Run `elkeep-cli' with ARGS asynchronously in BUFFER-NAME.
 Call SENTINEL when process changes state."
@@ -165,12 +175,31 @@ If called interactively, automatically save the chosen entry."
      (lambda (proc event)
        (elkeep-get-entries-sentinel interactive-p proc event)))))
 
+(defun elkeep-get-entries ()
+  "Retrieve entries from `elkeep-cli' and prompt user.
+If called interactively, automatically save the chosen entry.
+Respects `elkeep-exclude-labels', passing them via -L."
+  (interactive)
+  (let* ((interactive-p (called-interactively-p 'any))
+         (args (append '("-l")
+                       (when elkeep-exclude-labels
+                         (cons "-L" elkeep-exclude-labels)))))
+    (message "Querying keep for notes...")
+    (elkeep-run-cli-async
+     args
+     "*elkeep-cli-output*"
+     (lambda (proc event)
+       (elkeep-get-entries-sentinel interactive-p proc event)))))
+
+
 ;;;###autoload
 (defun elkeep-save-journal ()
   "Retrieve journal from `elkeep-cli' and save to `elkeep-journal-directory'."
   (interactive)
+  (unless (and (boundp 'elkeep-journal-label) elkeep-journal-label)
+    (user-error "You must customize `elkeep-journal-label’ before calling `elkeep-save-journal’"))
   (elkeep-run-cli-async
-   `("-j" ,elkeep-journal-directory)
+   `("-j" ,elkeep-journal-directory "-L" ,elkeep-journal-label)
    "*elkeep-cli-output*"
    (lambda (process event)
      (cond
