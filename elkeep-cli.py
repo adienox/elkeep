@@ -384,7 +384,7 @@ def get_journals(keep: gkeepapi.Keep, journal_path: str, label: str) -> None:
             get_note(keep, note["id"], filename, title, is_journal=True)
 
 
-def list_notes(files: list[dict]) -> None:
+def list_notes(files: list[dict], excluded_labels: list[str]) -> None:
     """Print a list of notes that do not have the label "JOURNAL".
 
     Args:
@@ -392,9 +392,10 @@ def list_notes(files: list[dict]) -> None:
                             with potential labels.
 
     """
-    exclude = {"JOURNAL", "NOSHOW"}
     notes = [
-        file for file in files if all(label not in file["labels"] for label in exclude)
+        file
+        for file in files
+        if all(label not in file["labels"] for label in excluded_labels)
     ]
 
     print(json.dumps(notes))  # noqa: T201
@@ -421,7 +422,14 @@ def main() -> None:
     parser.add_argument("-g", "--get", type=str, metavar="ID", help="Get a note by ID")
     parser.add_argument("-o", "--output", type=str, metavar="path", help="Output path")
     parser.add_argument("-t", "--token", type=str, metavar="token", help="Master token")
-    parser.add_argument("-L", "--label", type=str, metavar="label", help="Label")
+    parser.add_argument(
+        "-L",
+        "--labels",
+        nargs="+",
+        type=str,
+        metavar="labels",
+        help="Label(s) to identify journal or excluded note on list",
+    )
     parser.add_argument(
         "-T",
         "--title",
@@ -444,7 +452,7 @@ def main() -> None:
         logger.error("Journal path doesn't exist")
         sys.exit(1)
 
-    if args.journal and not args.label:
+    if args.journal and not args.labels[0]:
         logger.error("Label to identify journal not specified")
         sys.exit(1)
 
@@ -454,12 +462,12 @@ def main() -> None:
         store_token(args.token)
     elif args.list:
         files = get_files_list(keep)
-        list_notes(files)
+        list_notes(files, args.labels or [])
     elif args.get:
         output_path = Path(args.output) if args.output else None
         get_note(keep, args.get, output_path, args.title)
     elif args.journal:
-        get_journals(keep, args.journal, args.label)
+        get_journals(keep, args.journal, args.labels[0])
     else:
         parser.print_help()
         sys.exit(1)
