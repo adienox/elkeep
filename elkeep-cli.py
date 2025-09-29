@@ -297,11 +297,8 @@ def prepend_org_uuid(
 
     labels = get_labels(note)
 
-    tags = None
-    if not is_journal:
-        tags = f":{':'.join(labels)}:" if labels else None
-
-    if tags:
+    if not is_journal and labels:
+        tags = f":{':'.join(labels)}:"
         header = header + f"#+filetags: {tags}\n"
 
     # Read file content
