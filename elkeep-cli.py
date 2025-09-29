@@ -69,10 +69,10 @@ def make_pathsafe(s: str, replacement: str = "_") -> str:
     # Replace problematic characters
     s = (
         s.replace("/", replacement)
-         .replace("\0", replacement)
-         .replace(" ", replacement)
-         .replace("?", replacement)
-         .strip()
+        .replace("\0", replacement)
+        .replace(" ", replacement)
+        .replace("?", replacement)
+        .strip()
     )
     # Collapse multiple consecutive replacements
     s = re.sub(f"{re.escape(replacement)}+", replacement, s)
@@ -150,6 +150,7 @@ def login_keep() -> gkeepapi.Keep:
 
     return keep
 
+
 def get_labels(note: gkeepapi._node.TopLevelNode) -> list[str]:
     """Retrieve all labels associated with a given note.
 
@@ -161,6 +162,7 @@ def get_labels(note: gkeepapi._node.TopLevelNode) -> list[str]:
 
     """
     return [str(label) for label in note.labels.all()]
+
 
 def get_files_list(keep: gkeepapi.Keep) -> list[dict]:
     """Retrieve notes list from google keep.
@@ -256,6 +258,7 @@ def convert_file(input_file: Path, output_file: Path) -> None:
     if input_file.exists():
         Path.unlink(input_file)
 
+
 def combine_file(dst: Path, src: Path) -> None:
     """Combine the source file and destination file and deletes the source file.
 
@@ -273,6 +276,7 @@ def combine_file(dst: Path, src: Path) -> None:
         f_dst.write(f_src.read())
 
     Path.unlink(src)
+
 
 def prepend_org_uuid(path: Path, title: str, note: gkeepapi._node.TopLevelNode) -> None:
     """Prepend a new header containing a id, title, and tags to an Org mode file.
@@ -303,6 +307,7 @@ def prepend_org_uuid(path: Path, title: str, note: gkeepapi._node.TopLevelNode) 
     # Prepend header
     path.write_text(header + "\n" + original, encoding="utf-8")
 
+
 def get_note(
     keep: gkeepapi.Keep,
     note_id: str,
@@ -328,7 +333,7 @@ def get_note(
         if note:
             input_file = "untitled.md" if note.title == "" else f"{note.title}.md"
             input_file = Path(input_file)
-            is_journal ="JOURNAL" in get_labels(note)
+            is_journal = "JOURNAL" in get_labels(note)
 
             if output_path and output_path.suffix == ".org":
                 output_file = output_path
@@ -354,6 +359,7 @@ def get_note(
         else:
             logger.error("No note found with the given ID.")
 
+
 def get_journals(keep: gkeepapi.Keep, journal_path: str) -> None:
     """Retrieve journal notes from Google Keep and save them as Org files.
 
@@ -371,6 +377,7 @@ def get_journals(keep: gkeepapi.Keep, journal_path: str) -> None:
 
             get_note(keep, note["id"], filename, title)
 
+
 def list_notes(files: list[dict]) -> None:
     """Print a list of notes that do not have the label "JOURNAL".
 
@@ -381,12 +388,11 @@ def list_notes(files: list[dict]) -> None:
     """
     exclude = {"JOURNAL", "NOSHOW"}
     notes = [
-        file
-        for file in files
-        if all(label not in file["labels"] for label in exclude)
+        file for file in files if all(label not in file["labels"] for label in exclude)
     ]
 
     print(json.dumps(notes))  # noqa: T201
+
 
 def main() -> None:
     """Entry point for the program.
@@ -400,13 +406,21 @@ def main() -> None:
 
     parser.add_argument("-l", "--list", action="store_true", help="List all notes")
     parser.add_argument(
-        "-j", "--journal", type=str, metavar="path", help="Get all journal files",
+        "-j",
+        "--journal",
+        type=str,
+        metavar="path",
+        help="Get all journal files",
     )
     parser.add_argument("-g", "--get", type=str, metavar="ID", help="Get a note by ID")
     parser.add_argument("-o", "--output", type=str, metavar="path", help="Output path")
     parser.add_argument("-t", "--token", type=str, metavar="token", help="Master token")
     parser.add_argument(
-        "-T", "--title", type=str, metavar="title", help="Title of note",
+        "-T",
+        "--title",
+        type=str,
+        metavar="title",
+        help="Title of note",
     )
 
     args = parser.parse_args()
