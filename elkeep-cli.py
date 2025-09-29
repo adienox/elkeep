@@ -278,7 +278,9 @@ def combine_file(dst: Path, src: Path) -> None:
     Path.unlink(src)
 
 
-def prepend_org_uuid(path: Path, title: str, note: gkeepapi._node.TopLevelNode) -> None:
+def prepend_org_uuid(
+    path: Path, title: str, note: gkeepapi._node.TopLevelNode, is_journal: bool = False
+) -> None:
     """Prepend a new header containing a id, title, and tags to an Org mode file.
 
     Args:
@@ -295,7 +297,8 @@ def prepend_org_uuid(path: Path, title: str, note: gkeepapi._node.TopLevelNode) 
 
     labels = get_labels(note)
 
-    if "JOURNAL" not in labels:
+    tags = None
+    if not is_journal:
         tags = f":{':'.join(labels)}:" if labels else None
 
     if tags:
@@ -313,6 +316,7 @@ def get_note(
     note_id: str,
     output_path: Path | None,
     title: str | None = None,
+    is_journal: bool = False,
 ) -> None:
     """Retrieve a note by its ID, save its content to a file.
 
@@ -333,7 +337,6 @@ def get_note(
         if note:
             input_file = "untitled.md" if note.title == "" else f"{note.title}.md"
             input_file = Path(input_file)
-            is_journal = "JOURNAL" in get_labels(note)
 
             if output_path and output_path.suffix == ".org":
                 output_file = output_path
@@ -360,22 +363,23 @@ def get_note(
             logger.error("No note found with the given ID.")
 
 
-def get_journals(keep: gkeepapi.Keep, journal_path: str) -> None:
+def get_journals(keep: gkeepapi.Keep, journal_path: str, label: str) -> None:
     """Retrieve journal notes from Google Keep and save them as Org files.
 
     Args:
         keep (gkeepapi.Keep): The Google Keep API client instance.
         journal_path (str): The directory path where the journal files will be saved.
+        journal (str): The label to use to identify note as journal.
 
     """
     notes = get_files_list(keep)
 
     for note in notes:
-        if "JOURNAL" in note["labels"]:
+        if label in note["labels"]:
             title = datetime.fromisoformat(note["ctime"]).strftime("%Y-%m-%d")
             filename = Path(journal_path) / f"{title}.org"
 
-            get_note(keep, note["id"], filename, title)
+            get_note(keep, note["id"], filename, title, is_journal=True)
 
 
 def list_notes(files: list[dict]) -> None:
@@ -415,6 +419,7 @@ def main() -> None:
     parser.add_argument("-g", "--get", type=str, metavar="ID", help="Get a note by ID")
     parser.add_argument("-o", "--output", type=str, metavar="path", help="Output path")
     parser.add_argument("-t", "--token", type=str, metavar="token", help="Master token")
+    parser.add_argument("-L", "--label", type=str, metavar="label", help="Label")
     parser.add_argument(
         "-T",
         "--title",
@@ -437,6 +442,10 @@ def main() -> None:
         logger.error("Journal path doesn't exist")
         sys.exit(1)
 
+    if args.journal and not args.label:
+        logger.error("Label to identify journal not specified")
+        sys.exit(1)
+
     keep = login_keep()
 
     if args.token:
@@ -448,7 +457,7 @@ def main() -> None:
         output_path = Path(args.output) if args.output else None
         get_note(keep, args.get, output_path, args.title)
     elif args.journal:
-        get_journals(keep, args.journal)
+        get_journals(keep, args.journal, args.label)
     else:
         parser.print_help()
         sys.exit(1)
