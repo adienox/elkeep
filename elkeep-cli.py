@@ -278,7 +278,7 @@ def combine_file(dst: Path, src: Path) -> None:
     Path.unlink(src)
 
 
-def prepend_org_uuid(
+def prepend_org_preamble(
     path: Path, title: str, note: gkeepapi._node.TopLevelNode, is_journal: bool = False
 ) -> None:
     """Prepend a new header containing a id, title, and tags to an Org mode file.
@@ -351,7 +351,7 @@ def get_note(
                 combine_file(output_file, f"{output_file}.temp")
             else:
                 convert_file(input_file, output_file)
-                prepend_org_uuid(
+                prepend_org_preamble(
                     output_file, title if title else note.title, note, is_journal
                 )
 
