@@ -356,8 +356,13 @@ def get_note(
                 convert_file(input_file, output_file)
                 prepend_org_uuid(output_file, title if title else note.title, note)
 
-            print(f"File saved: {output_file}") # noqa: T201
-            note.archived = True
+            print(f"File saved: {output_file}")  # noqa: T201
+
+            if is_journal:
+                note.delete()
+            else:
+                note.archived = True
+
             keep.sync()
         else:
             logger.error("No note found with the given ID.")
