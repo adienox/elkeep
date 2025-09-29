@@ -351,7 +351,9 @@ def get_note(
                 combine_file(output_file, f"{output_file}.temp")
             else:
                 convert_file(input_file, output_file)
-                prepend_org_uuid(output_file, title if title else note.title, note)
+                prepend_org_uuid(
+                    output_file, title if title else note.title, note, is_journal
+                )
 
             print(f"File saved: {output_file}")  # noqa: T201
 
