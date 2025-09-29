@@ -69,33 +69,24 @@ brew install pandoc
 python elkeep-cli.py --help
 #+end_src
 
-** Building Binary (Optional)
-A Makefile is provided to build a standalone binary using Nuitka:
-
-#+begin_src bash
-# Build standalone binary
-make build
-
-# Run the binary
-make run
-
-# Clean build artifacts
-make clean
-#+end_src
-
 ** Emacs Package
 
 1. Add =elkeep.el= to your Emacs load path
-2. Ensure dependencies are installed (org-roam, nano-read)
+2. Ensure dependencies are installed (org-roam, [[https://github.com/rougier/nano-read][nano-read]])
 3. Configure the package in your Emacs configuration:
 
 #+begin_src emacs-lisp
-(require 'elkeep)
 
-;; Configure paths
-(setq elkeep-cli-bin "/path/to/elkeep-cli.py")  ; or just "elkeep-cli" if in PATH
-(setq elkeep-notes-directory "/path/to/notes")   ; e.g., org-roam-directory
-(setq elkeep-journal-directory "/path/to/journals") ; e.g., org-roam-dailies directory
+  (use-package elkeep
+    :ensure (:host github :repo "adienox/elkeep")
+    :commands (elkeep-get-entries elkeep-save-journal)
+    :custom
+    (elkeep-journal-label "JOURNAL")
+    (elkeep-exclude-labels '("JOURNAL" "NOSHOW"))
+    (elkeep-notes-directory "/path/to/notes") ; e.g., org-roam-directory
+    (elkeep-journal-directory "/path/to/journals") ; e.g., org-roam-dailies directory
+    (elkeep-cli-bin "/path/to/elkeep-cli.py")) ; or just "elkeep-cli" if in PATH
+
 #+end_src
 
 * Usage
@@ -103,7 +94,12 @@ make clean
 ** CLI Tool
 
 *** Authentication
-First, you need to authenticate with Google Keep:
+First, you need to authenticate with Google Keep, to get the master token follow the below steps:
+
+- Go to https://accounts.google.com/EmbeddedSetup
+- Log into your Google Account
+- Click on "I agree" when prompted. The page may show a loading screen forever; ignore it and move on to the next step.
+- Obtain the value of the oauth_token cookie. For more details see the second way from [[https://github.com/rukins/gpsoauth-java/blob/b74ebca999d0f5bd38a2eafe3c0d50be552f6385/README.md#second-way][gpsoauth-java readme]].
 
 #+begin_src bash
 # Store your master token (you'll need to obtain this from Google Keep)
@@ -128,10 +124,12 @@ elkeep-cli.py -g NOTE_ID -o ./notes -T "Custom Title"
 *** Export Journal Entries
 #+begin_src bash
 # Export all journal entries to a directory
-elkeep-cli.py -j ./journals
+elkeep-cli.py -j ./journals -L JOURNAL
 #+end_src
 
 ** Emacs Integration
+
+Make sure to have =uv= installed as we use =uv= scripts to run the python script.
 
 *** Interactive Functions
 
@@ -152,6 +150,8 @@ elkeep-cli.py -j ./journals
 - =elkeep-cli-bin= - Path to the elkeep-cli binary (default: searches PATH)
 - =elkeep-notes-directory= - Directory for saving notes (recommend: =org-roam-directory=)
 - =elkeep-journal-directory= - Directory for journal entries (recommend: org-roam dailies directory)
+- =elkeep-journal-label= - Label to identify note as a journal entry
+- =elkeep-exclude-labels= - Labels to exclude when showing notes
 
 ** Note Processing
 
@@ -166,8 +166,7 @@ elkeep-cli.py -j ./journals
 elkeep/
 ├── elkeep-cli.py          # Python CLI tool
 ├── elkeep.el              # Emacs integration
-├── Makefile               # Build configuration
-├── pyproject.toml         # Python project metadata  
+├── pyproject.toml         # Python project metadata
 ├── uv.lock                # UV lock file
 ├── .python-version        # Python version specification
 └── README.org             # This file
@@ -197,7 +196,6 @@ Ensure =elkeep-cli-bin= points to the correct script location and that it's exec
 
 - CLI processes create buffers like =*elkeep-cli-output*= and =*elkeep-get-entry*= for debugging
 - Failed operations will display the process buffer with error details
-- Use =M-x elkeep-get-entries= interactively to see detailed process output
 
 * License
 
